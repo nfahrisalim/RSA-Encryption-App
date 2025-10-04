@@ -178,20 +178,83 @@ def main():
                     5. Hitung d sebagai modular inverse dari e mod φ(n)
                     """)
                 
+                # Opsi pengaturan tampilan parameter
+                col_settings1, col_settings2 = st.columns([3, 1])
+                with col_settings2:
+                    show_calculations = st.checkbox("Tampilkan Perhitungan Detail", value=False, 
+                                                   help="Tampilkan langkah-langkah perhitungan untuk setiap parameter")
+                
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     st.subheader("📊 Parameter Dasar")
+                    
+                    # p dengan tooltip
                     st.write(f"**p =** {p}")
+                    if show_calculations:
+                        st.caption(f"Bilangan prima pertama yang dipilih")
+                    
+                    # q dengan tooltip
                     st.write(f"**q =** {q}")
+                    if show_calculations:
+                        st.caption(f"Bilangan prima kedua yang dipilih")
+                    
+                    # n dengan perhitungan
                     st.write(f"**n = p × q =** {n}")
+                    if show_calculations:
+                        st.caption(f"Perhitungan: {p} × {q} = {n}")
+                        st.caption(f"n adalah modulus untuk enkripsi dan dekripsi")
+                    
+                    # phi dengan perhitungan
                     st.write(f"**φ(n) = (p-1) × (q-1) =** {phi}")
+                    if show_calculations:
+                        st.caption(f"Perhitungan: ({p}-1) × ({q}-1) = {p-1} × {q-1} = {phi}")
+                        st.caption(f"φ(n) adalah Euler's totient function")
+                    
+                    # Tambahan detail parameter dasar
+                    if show_calculations:
+                        with st.expander("➕ Informasi Tambahan Parameter"):
+                            st.write(f"**Faktorisasi n:** {p} × {q} = {n}")
+                            st.write(f"**p - 1 =** {p-1}")
+                            st.write(f"**q - 1 =** {q-1}")
+                            st.write(f"**φ(n) =** {phi}")
+                            st.write(f"**GCD(e, φ) =** {gcd(e, phi)}")
                 
                 with col2:
                     st.subheader("🔐 Kunci")
+                    
+                    # Kunci Publik
                     st.write(f"**Kunci Publik (e, n) =** ({e}, {n})")
+                    if show_calculations:
+                        st.caption(f"e = {e} (eksponen enkripsi)")
+                        st.caption(f"n = {n} (modulus)")
+                    
+                    # Kunci Privat
                     st.write(f"**Kunci Privat (d, n) =** ({d}, {n})")
-                    st.write(f"**Verifikasi: e × d mod φ =** {(e * d) % phi}")
+                    if show_calculations:
+                        st.caption(f"d = {d} (eksponen dekripsi)")
+                        st.caption(f"d adalah modular inverse dari e mod φ(n)")
+                    
+                    # Verifikasi
+                    verification = (e * d) % phi
+                    st.write(f"**Verifikasi: e × d mod φ =** {verification}")
+                    if show_calculations:
+                        st.caption(f"Perhitungan: ({e} × {d}) mod {phi}")
+                        st.caption(f"= {e * d} mod {phi} = {verification}")
+                        if verification == 1:
+                            st.caption("✅ Kunci valid (hasil = 1)")
+                        else:
+                            st.caption("❌ Error: hasil harus = 1")
+                    
+                    # Tambahan detail kunci
+                    if show_calculations:
+                        with st.expander("➕ Informasi Tambahan Kunci"):
+                            st.write("**Properti Kunci:**")
+                            st.write(f"- e × d ≡ 1 (mod φ(n))")
+                            st.write(f"- {e} × {d} ≡ 1 (mod {phi})")
+                            st.write(f"- {e} × {d} = {e*d}")
+                            st.write(f"- Dapat dibagikan: Public Key (e, n)")
+                            st.write(f"- Harus dirahasiakan: Private Key (d, n)")
                 
                 st.markdown("---")
                 
