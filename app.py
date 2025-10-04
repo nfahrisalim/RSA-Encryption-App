@@ -179,33 +179,72 @@ def main():
                     """)
                 
                 # Opsi pengaturan tampilan parameter
-                col_settings1, col_settings2 = st.columns([3, 1])
+                col_settings1, col_settings2, col_settings3 = st.columns([2, 1, 1])
                 with col_settings2:
                     show_calculations = st.checkbox("Tampilkan Perhitungan Detail", value=False, 
                                                    help="Tampilkan langkah-langkah perhitungan untuk setiap parameter")
+                with col_settings3:
+                    edit_mode = st.checkbox("Edit Parameter", value=False,
+                                           help="Aktifkan untuk mengedit nilai p, q, dan e")
                 
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     st.subheader("📊 Parameter Dasar")
                     
-                    # p dengan tooltip
-                    st.write(f"**p =** {p}")
-                    if show_calculations:
-                        st.caption(f"Bilangan prima pertama yang dipilih")
+                    if edit_mode:
+                        # Mode edit - bisa input langsung
+                        st.write("**Edit bilangan prima:**")
+                        
+                        # Input p
+                        new_p = st.number_input("**p** (bilangan prima):", 
+                                               min_value=2, value=p, step=1, 
+                                               key="edit_p",
+                                               help="Masukkan bilangan prima pertama")
+                        if new_p != p:
+                            if is_prime(new_p):
+                                st.success(f"✅ {new_p} adalah bilangan prima")
+                                st.session_state.random_p = new_p
+                                st.rerun()
+                            else:
+                                st.error(f"❌ {new_p} bukan bilangan prima!")
+                        
+                        # Input q
+                        new_q = st.number_input("**q** (bilangan prima):", 
+                                               min_value=2, value=q, step=1,
+                                               key="edit_q",
+                                               help="Masukkan bilangan prima kedua (harus berbeda dari p)")
+                        if new_q != q:
+                            if is_prime(new_q):
+                                if new_q != new_p:
+                                    st.success(f"✅ {new_q} adalah bilangan prima")
+                                    st.session_state.random_q = new_q
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ q tidak boleh sama dengan p!")
+                            else:
+                                st.error(f"❌ {new_q} bukan bilangan prima!")
+                        
+                        st.info("💡 Gunakan sidebar atau klik 'Generate Random Primes' untuk nilai acak")
+                    else:
+                        # Mode view - hanya tampilan
+                        # p dengan tooltip
+                        st.write(f"**p =** {p}")
+                        if show_calculations:
+                            st.caption(f"Bilangan prima pertama yang dipilih")
+                        
+                        # q dengan tooltip
+                        st.write(f"**q =** {q}")
+                        if show_calculations:
+                            st.caption(f"Bilangan prima kedua yang dipilih")
                     
-                    # q dengan tooltip
-                    st.write(f"**q =** {q}")
-                    if show_calculations:
-                        st.caption(f"Bilangan prima kedua yang dipilih")
-                    
-                    # n dengan perhitungan
+                    # n dengan perhitungan (selalu tampil)
                     st.write(f"**n = p × q =** {n}")
                     if show_calculations:
                         st.caption(f"Perhitungan: {p} × {q} = {n}")
                         st.caption(f"n adalah modulus untuk enkripsi dan dekripsi")
                     
-                    # phi dengan perhitungan
+                    # phi dengan perhitungan (selalu tampil)
                     st.write(f"**φ(n) = (p-1) × (q-1) =** {phi}")
                     if show_calculations:
                         st.caption(f"Perhitungan: ({p}-1) × ({q}-1) = {p-1} × {q-1} = {phi}")
@@ -223,7 +262,25 @@ def main():
                 with col2:
                     st.subheader("🔐 Kunci")
                     
-                    # Kunci Publik
+                    if edit_mode:
+                        # Mode edit - bisa input e langsung
+                        st.write("**Edit eksponen publik e:**")
+                        
+                        new_e = st.number_input(f"**e** (relatif prima dengan φ={phi}):", 
+                                               min_value=2, max_value=phi-1, value=e, step=1,
+                                               key="edit_e",
+                                               help="Eksponen enkripsi publik. Nilai umum: 3, 17, 257, 65537")
+                        
+                        if new_e != e:
+                            if gcd(new_e, phi) == 1:
+                                st.success(f"✅ e = {new_e} relatif prima dengan φ = {phi}")
+                                st.info("⚠️ Silakan ubah nilai e di sidebar untuk menerapkan perubahan")
+                            else:
+                                st.error(f"❌ e = {new_e} tidak relatif prima dengan φ = {phi} (GCD = {gcd(new_e, phi)})")
+                        
+                        st.info("💡 Ubah nilai e di sidebar untuk menerapkan perubahan")
+                    
+                    # Kunci Publik (selalu tampil)
                     st.write(f"**Kunci Publik (e, n) =** ({e}, {n})")
                     if show_calculations:
                         st.caption(f"e = {e} (eksponen enkripsi)")
