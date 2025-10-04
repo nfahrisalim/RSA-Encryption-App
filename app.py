@@ -1,5 +1,8 @@
 import streamlit as st
 import math
+import random
+import pandas as pd
+import io
 
 # Fungsi cari gcd
 def gcd(a, b):
@@ -48,16 +51,82 @@ def is_prime(n):
             return False
     return True
 
+# Generate bilangan prima acak
+def generate_random_prime(min_val=10, max_val=100):
+    primes = [n for n in range(min_val, max_val) if is_prime(n)]
+    if primes:
+        return random.choice(primes)
+    return 7
+
+# Enkripsi teks dengan support untuk semua karakter
+def encrypt_text(text, e, n, support_all_chars=False):
+    cipher_numbers = []
+    cipher_letters = []
+    encryption_data = []
+    
+    for ch in text:
+        ascii_val = ord(ch)
+        cipher_num = mod_exp(ascii_val, e, n)
+        cipher_letter = angka_ke_huruf(cipher_num)
+        
+        encryption_data.append({
+            'Karakter': ch if ch != ' ' else '␣',
+            'ASCII (m)': ascii_val,
+            f'm^{e} mod {n}': cipher_num,
+            'Cipher Huruf': cipher_letter
+        })
+        
+        cipher_numbers.append(cipher_num)
+        cipher_letters.append(cipher_letter)
+    
+    return cipher_numbers, cipher_letters, encryption_data
+
+# Dekripsi teks
+def decrypt_text(cipher_numbers, d, n):
+    decrypted_numbers = []
+    decrypted_letters = []
+    decryption_data = []
+    
+    for cipher_num in cipher_numbers:
+        decrypted_num = mod_exp(cipher_num, d, n)
+        decrypted_letter = chr(decrypted_num)
+        
+        decryption_data.append({
+            'Cipher (c)': cipher_num,
+            f'c^{d} mod {n}': decrypted_num,
+            'ASCII ke Karakter': decrypted_letter if decrypted_letter != ' ' else '␣'
+        })
+        
+        decrypted_numbers.append(decrypted_num)
+        decrypted_letters.append(decrypted_letter)
+    
+    return decrypted_numbers, decrypted_letters, decryption_data
+
 def main():
     st.title("🔐 RSA Encryption/Decryption Calculator")
     st.markdown("---")
     
     # Sidebar untuk parameter RSA
-    st.sidebar.header("RSA Parameters")
+    st.sidebar.header("⚙️ RSA Parameters")
+    
+    # Opsi generate random primes
+    st.sidebar.subheader("🎲 Generator Bilangan Prima")
+    if st.sidebar.button("Generate Random Primes", help="Klik untuk membuat bilangan prima p dan q secara acak"):
+        st.session_state.random_p = generate_random_prime(10, 100)
+        st.session_state.random_q = generate_random_prime(10, 100)
+        while st.session_state.random_q == st.session_state.random_p:
+            st.session_state.random_q = generate_random_prime(10, 100)
+        st.sidebar.success(f"✨ Generated: p={st.session_state.random_p}, q={st.session_state.random_q}")
     
     # Input untuk bilangan prima p dan q
-    p = st.sidebar.number_input("Masukkan bilangan prima p:", min_value=2, value=7, step=1)
-    q = st.sidebar.number_input("Masukkan bilangan prima q:", min_value=2, value=11, step=1)
+    default_p = st.session_state.get('random_p', 7)
+    default_q = st.session_state.get('random_q', 11)
+    
+    st.sidebar.subheader("🔢 Input Bilangan Prima")
+    p = st.sidebar.number_input("Masukkan bilangan prima p:", min_value=2, value=default_p, step=1, 
+                                help="Bilangan prima pertama untuk RSA. Contoh: 7, 11, 13, 17, 19, 23")
+    q = st.sidebar.number_input("Masukkan bilangan prima q:", min_value=2, value=default_q, step=1,
+                                help="Bilangan prima kedua untuk RSA. Harus berbeda dari p")
     
     # Validasi bilangan prima
     p_is_prime = is_prime(p)
@@ -79,8 +148,10 @@ def main():
         phi = (p - 1) * (q - 1)
         
         # Input untuk e
+        st.sidebar.subheader("🔑 Eksponen Publik")
         e = st.sidebar.number_input(f"Masukkan nilai e (1 < e < {phi}, relatif prima dengan φ):", 
-                                   min_value=2, max_value=phi-1, value=min(65537, phi-1), step=1)
+                                   min_value=2, max_value=phi-1, value=min(65537, phi-1) if phi > 65537 else min(17, phi-1), step=1,
+                                   help="Eksponen enkripsi publik. Nilai umum: 3, 17, 257, 65537")
         
         # Validasi e
         if gcd(e, phi) == 1:
@@ -92,109 +163,189 @@ def main():
                 
                 # Tampilkan hasil kunci
                 st.header("🔑 Kunci RSA yang Dihasilkan")
+                
+                with st.expander("ℹ️ Apa itu kunci RSA?", expanded=False):
+                    st.write("""
+                    **RSA** adalah algoritma enkripsi asimetris yang menggunakan sepasang kunci:
+                    - **Kunci Publik (e, n)**: Digunakan untuk mengenkripsi pesan. Bisa dibagikan ke publik.
+                    - **Kunci Privat (d, n)**: Digunakan untuk mendekripsi pesan. Harus dirahasiakan.
+                    
+                    **Cara Kerja:**
+                    1. Pilih dua bilangan prima p dan q
+                    2. Hitung n = p × q (modulus)
+                    3. Hitung φ(n) = (p-1) × (q-1) (Euler's totient)
+                    4. Pilih e yang relatif prima dengan φ(n)
+                    5. Hitung d sebagai modular inverse dari e mod φ(n)
+                    """)
+                
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.subheader("Parameter Dasar")
+                    st.subheader("📊 Parameter Dasar")
                     st.write(f"**p =** {p}")
                     st.write(f"**q =** {q}")
                     st.write(f"**n = p × q =** {n}")
                     st.write(f"**φ(n) = (p-1) × (q-1) =** {phi}")
                 
                 with col2:
-                    st.subheader("Kunci")
+                    st.subheader("🔐 Kunci")
                     st.write(f"**Kunci Publik (e, n) =** ({e}, {n})")
                     st.write(f"**Kunci Privat (d, n) =** ({d}, {n})")
                     st.write(f"**Verifikasi: e × d mod φ =** {(e * d) % phi}")
                 
                 st.markdown("---")
                 
-                # Input pesan
+                # Input pesan dengan opsi mode
                 st.header("💬 Enkripsi dan Dekripsi Pesan")
-                pesan = st.text_input("Masukkan pesan (huruf kapital A-Z):", value="HELLO").upper()
                 
-                # Filter hanya huruf A-Z
-                pesan_filtered = ''.join([ch for ch in pesan if ch.isalpha() and ch.isupper()])
+                # Mode input
+                input_mode = st.radio("Mode Input:", ["Text Input", "File Upload"], horizontal=True,
+                                     help="Pilih apakah ingin mengetik teks langsung atau upload file")
                 
-                if pesan_filtered != pesan and pesan:
-                    st.warning(f"Pesan difilter menjadi: {pesan_filtered}")
-                    pesan = pesan_filtered
+                pesan = ""
+                
+                if input_mode == "Text Input":
+                    # Opsi untuk support semua karakter
+                    support_all_chars = st.checkbox("Support lowercase & karakter spesial", value=False,
+                                                   help="Centang untuk mendukung huruf kecil, spasi, dan karakter khusus")
+                    
+                    if support_all_chars:
+                        pesan = st.text_area("Masukkan pesan (semua karakter):", value="Hello World!", height=100)
+                    else:
+                        pesan_input = st.text_input("Masukkan pesan (huruf kapital A-Z):", value="HELLO")
+                        pesan = pesan_input.upper()
+                        # Filter hanya huruf A-Z
+                        pesan_filtered = ''.join([ch for ch in pesan if ch.isalpha() and ch.isupper()])
+                        if pesan_filtered != pesan and pesan:
+                            st.warning(f"Pesan difilter menjadi: {pesan_filtered}")
+                            pesan = pesan_filtered
+                else:
+                    # File upload
+                    uploaded_file = st.file_uploader("Upload file teks:", type=['txt'], 
+                                                     help="Upload file .txt untuk dienkripsi")
+                    if uploaded_file is not None:
+                        pesan = uploaded_file.read().decode('utf-8')
+                        st.info(f"File loaded: {len(pesan)} karakter")
+                        with st.expander("Preview pesan dari file"):
+                            st.text(pesan[:500] + ('...' if len(pesan) > 500 else ''))
+                    support_all_chars = True
                 
                 if pesan:
+                    # Enkripsi
                     st.subheader("🔒 Proses Enkripsi")
                     
+                    with st.expander("ℹ️ Bagaimana enkripsi bekerja?", expanded=False):
+                        st.write("""
+                        **Proses Enkripsi:**
+                        1. Setiap karakter dikonversi ke nilai ASCII
+                        2. Nilai ASCII dipangkatkan dengan eksponen e
+                        3. Hasil dipangkatan di-mod dengan n untuk mendapat ciphertext
+                        4. Formula: **c ≡ m^e (mod n)**
+                        
+                        Ciphertext yang dihasilkan aman karena sangat sulit menghitung akar pangkat e mod n tanpa mengetahui kunci privat d.
+                        """)
+                    
+                    cipher_numbers, cipher_letters, encryption_data = encrypt_text(pesan, e, n, support_all_chars)
+                    
                     # Tampilkan tabel enkripsi
-                    st.write("**Langkah 1: Konversi huruf ke ASCII**")
-                    ascii_values = [ord(ch) for ch in pesan]
-                    
-                    # Buat DataFrame untuk menampilkan proses
-                    import pandas as pd
-                    
-                    encryption_data = []
-                    cipher_numbers = []
-                    cipher_letters = []
-                    
-                    for i, ch in enumerate(pesan):
-                        ascii_val = ord(ch)
-                        # Enkripsi: c = m^e mod n
-                        cipher_num = mod_exp(ascii_val, e, n)
-                        cipher_letter = angka_ke_huruf(cipher_num)
-                        
-                        encryption_data.append({
-                            'Huruf': ch,
-                            'ASCII (m)': ascii_val,
-                            f'm^{e} mod {n}': cipher_num,
-                            'Cipher Huruf': cipher_letter
-                        })
-                        
-                        cipher_numbers.append(cipher_num)
-                        cipher_letters.append(cipher_letter)
-                    
-                    df_encryption = pd.DataFrame(encryption_data)
-                    st.dataframe(df_encryption, use_container_width=True)
+                    if len(pesan) <= 50:
+                        st.write("**Langkah per Karakter:**")
+                        df_encryption = pd.DataFrame(encryption_data)
+                        st.dataframe(df_encryption, width=800)
+                    else:
+                        st.info(f"Pesan terlalu panjang ({len(pesan)} karakter) untuk ditampilkan dalam tabel detail.")
+                        with st.expander("Lihat detail enkripsi"):
+                            df_encryption = pd.DataFrame(encryption_data)
+                            st.dataframe(df_encryption, width=800)
                     
                     st.write("**Hasil Enkripsi:**")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.write(f"**Ciphertext (angka):** {cipher_numbers}")
+                        st.write(f"**Ciphertext (angka):**")
+                        st.code(str(cipher_numbers), language=None)
                     with col2:
-                        st.write(f"**Ciphertext (huruf):** {''.join(cipher_letters)}")
+                        st.write(f"**Ciphertext (huruf):**")
+                        cipher_text = ''.join(cipher_letters)
+                        st.code(cipher_text, language=None)
+                    
+                    # Download hasil enkripsi
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        cipher_text_file = '\n'.join([
+                            "=== RSA Encrypted Message ===",
+                            f"Ciphertext (numbers): {cipher_numbers}",
+                            f"Ciphertext (letters): {cipher_text}",
+                            f"Public Key (e, n): ({e}, {n})",
+                            ""
+                        ])
+                        st.download_button(
+                            label="📥 Download Ciphertext",
+                            data=cipher_text_file,
+                            file_name="encrypted.txt",
+                            mime="text/plain"
+                        )
+                    
+                    # Visualisasi proses enkripsi
+                    if len(pesan) <= 10:
+                        with st.expander("📊 Visualisasi Proses Enkripsi", expanded=False):
+                            st.write("**Grafik Transformasi ASCII → Ciphertext**")
+                            chart_data = pd.DataFrame({
+                                'Karakter': [ch if ch != ' ' else '␣' for ch in pesan],
+                                'Nilai ASCII': [ord(ch) for ch in pesan],
+                                'Ciphertext': cipher_numbers
+                            })
+                            st.bar_chart(chart_data.set_index('Karakter')[['Nilai ASCII', 'Ciphertext']])
                     
                     st.markdown("---")
                     
                     # Proses Dekripsi
                     st.subheader("🔓 Proses Dekripsi")
                     
-                    decryption_data = []
-                    decrypted_numbers = []
-                    decrypted_letters = []
-                    
-                    for i, cipher_num in enumerate(cipher_numbers):
-                        # Dekripsi: m = c^d mod n
-                        decrypted_num = mod_exp(cipher_num, d, n)
-                        decrypted_letter = chr(decrypted_num)
+                    with st.expander("ℹ️ Bagaimana dekripsi bekerja?", expanded=False):
+                        st.write("""
+                        **Proses Dekripsi:**
+                        1. Ciphertext dipangkatkan dengan eksponen privat d
+                        2. Hasil dipangkatan di-mod dengan n
+                        3. Nilai yang didapat adalah nilai ASCII asli
+                        4. Nilai ASCII dikonversi kembali ke karakter
+                        5. Formula: **m ≡ c^d (mod n)**
                         
-                        decryption_data.append({
-                            'Cipher (c)': cipher_num,
-                            f'c^{d} mod {n}': decrypted_num,
-                            'ASCII ke Huruf': decrypted_letter
-                        })
-                        
-                        decrypted_numbers.append(decrypted_num)
-                        decrypted_letters.append(decrypted_letter)
+                        Hanya pemilik kunci privat d yang dapat mendekripsi pesan dengan benar.
+                        """)
                     
-                    df_decryption = pd.DataFrame(decryption_data)
-                    st.dataframe(df_decryption, use_container_width=True)
+                    decrypted_numbers, decrypted_letters, decryption_data = decrypt_text(cipher_numbers, d, n)
+                    
+                    if len(pesan) <= 50:
+                        st.write("**Langkah per Karakter:**")
+                        df_decryption = pd.DataFrame(decryption_data)
+                        st.dataframe(df_decryption, width=800)
+                    else:
+                        st.info(f"Pesan terlalu panjang ({len(pesan)} karakter) untuk ditampilkan dalam tabel detail.")
+                        with st.expander("Lihat detail dekripsi"):
+                            df_decryption = pd.DataFrame(decryption_data)
+                            st.dataframe(df_decryption, width=800)
                     
                     st.write("**Hasil Dekripsi:**")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.write(f"**Plaintext (ASCII):** {decrypted_numbers}")
+                        st.write(f"**Plaintext (ASCII):**")
+                        st.code(str(decrypted_numbers), language=None)
                     with col2:
-                        st.write(f"**Plaintext (huruf):** {''.join(decrypted_letters)}")
+                        st.write(f"**Plaintext (teks):**")
+                        decrypted_text = ''.join(decrypted_letters)
+                        st.code(decrypted_text, language=None)
+                    
+                    # Download hasil dekripsi
+                    with col2:
+                        st.download_button(
+                            label="📥 Download Plaintext",
+                            data=decrypted_text,
+                            file_name="decrypted.txt",
+                            mime="text/plain"
+                        )
                     
                     # Verifikasi
-                    if pesan == ''.join(decrypted_letters):
+                    if pesan == decrypted_text:
                         st.success("✅ Dekripsi berhasil! Pesan asli berhasil dipulihkan.")
                     else:
                         st.error("❌ Terjadi kesalahan dalam proses enkripsi/dekripsi.")
@@ -202,16 +353,23 @@ def main():
                     # Penjelasan matematis
                     st.markdown("---")
                     st.subheader("📚 Penjelasan Matematis")
-                    st.write(f"""
-                    **Enkripsi:** c ≡ m^e (mod n) = m^{e} (mod {n})
                     
-                    **Dekripsi:** m ≡ c^d (mod n) = c^{d} (mod {n})
-                    
-                    **Kunci:** 
-                    - Public Key: (e={e}, n={n})
-                    - Private Key: (d={d}, n={n})
-                    - e × d ≡ 1 (mod φ(n)) → {e} × {d} ≡ 1 (mod {phi})
-                    """)
+                    with st.expander("📖 Lihat Detail Formula", expanded=False):
+                        st.latex(r"c \equiv m^e \pmod{n}")
+                        st.write(f"**Enkripsi:** c ≡ m^{e} (mod {n})")
+                        st.write("")
+                        
+                        st.latex(r"m \equiv c^d \pmod{n}")
+                        st.write(f"**Dekripsi:** m ≡ c^{d} (mod {n})")
+                        st.write("")
+                        
+                        st.write("**Kunci:**")
+                        st.write(f"- Public Key: (e={e}, n={n})")
+                        st.write(f"- Private Key: (d={d}, n={n})")
+                        
+                        st.latex(r"e \times d \equiv 1 \pmod{\phi(n)}")
+                        st.write(f"- Verifikasi: {e} × {d} ≡ 1 (mod {phi})")
+                        st.write(f"- Hasil: {e} × {d} = {e*d}, {e*d} mod {phi} = {(e*d) % phi}")
                     
             except Exception as ex:
                 st.sidebar.error(f"Error menghitung private key: {str(ex)}")
@@ -225,11 +383,12 @@ def main():
     # Informasi tambahan
     st.sidebar.markdown("---")
     st.sidebar.info("""
-    **Tips:**
+    **💡 Tips:**
     - Pilih bilangan prima p dan q yang berbeda
     - e harus relatif prima dengan φ(n)
     - Nilai e yang umum: 3, 17, 257, 65537
     - Untuk keamanan nyata, gunakan bilangan prima yang lebih besar
+    - Gunakan generator untuk coba berbagai kombinasi
     """)
 
 if __name__ == "__main__":
