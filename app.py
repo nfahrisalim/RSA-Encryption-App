@@ -103,14 +103,14 @@ def decrypt_text(cipher_numbers, d, n):
     return decrypted_numbers, decrypted_letters, decryption_data
 
 def main():
-    st.title("🔐 RSA Encryption/Decryption Calculator")
+    st.title("RSA Encryption/Decryption Calculator")
     st.markdown("---")
     
     # Sidebar untuk parameter RSA
-    st.sidebar.header("⚙️ RSA Parameters")
+    st.sidebar.header("RSA Parameters")
     
     # Opsi generate random primes
-    st.sidebar.subheader("🎲 Generator Bilangan Prima")
+    st.sidebar.subheader("Generator Bilangan Prima")
     if st.sidebar.button("Generate Random Primes", help="Klik untuk membuat bilangan prima p dan q secara acak"):
         st.session_state.random_p = generate_random_prime(10, 100)
         st.session_state.random_q = generate_random_prime(10, 100)
@@ -122,7 +122,7 @@ def main():
     default_p = st.session_state.get('random_p', 7)
     default_q = st.session_state.get('random_q', 11)
     
-    st.sidebar.subheader("🔢 Input Bilangan Prima")
+    st.sidebar.subheader("Input Bilangan Prima")
     p = st.sidebar.number_input("Masukkan bilangan prima p:", min_value=2, value=default_p, step=1, 
                                 help="Bilangan prima pertama untuk RSA. Contoh: 7, 11, 13, 17, 19, 23")
     q = st.sidebar.number_input("Masukkan bilangan prima q:", min_value=2, value=default_q, step=1,
@@ -148,7 +148,7 @@ def main():
         phi = (p - 1) * (q - 1)
         
         # Input untuk e
-        st.sidebar.subheader("🔑 Eksponen Publik")
+        st.sidebar.subheader("Eksponen Publik")
         e = st.sidebar.number_input(f"Masukkan nilai e (1 < e < {phi}, relatif prima dengan φ):", 
                                    min_value=2, max_value=phi-1, value=min(65537, phi-1) if phi > 65537 else min(17, phi-1), step=1,
                                    help="Eksponen enkripsi publik. Nilai umum: 3, 17, 257, 65537")
@@ -162,9 +162,9 @@ def main():
                 d = mod_inverse(e, phi)
                 
                 # Tampilkan hasil kunci
-                st.header("🔑 Kunci RSA yang Dihasilkan")
+                st.header("Kunci RSA yang Dihasilkan")
                 
-                with st.expander("ℹ️ Apa itu kunci RSA?", expanded=False):
+                with st.expander("Apa itu kunci RSA?", expanded=False):
                     st.write("""
                     **RSA** adalah algoritma enkripsi asimetris yang menggunakan sepasang kunci:
                     - **Kunci Publik (e, n)**: Digunakan untuk mengenkripsi pesan. Bisa dibagikan ke publik.
@@ -190,7 +190,7 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.subheader("📊 Parameter Dasar")
+                    st.subheader("Parameter Dasar")
                     
                     if edit_mode:
                         # Mode edit - bisa input langsung
@@ -225,7 +225,7 @@ def main():
                             else:
                                 st.error(f"❌ {new_q} bukan bilangan prima!")
                         
-                        st.info("💡 Gunakan sidebar atau klik 'Generate Random Primes' untuk nilai acak")
+                        st.info("Gunakan sidebar atau klik 'Generate Random Primes' untuk nilai acak")
                     else:
                         # Mode view - hanya tampilan
                         # p dengan tooltip
@@ -260,7 +260,7 @@ def main():
                             st.write(f"**GCD(e, φ) =** {gcd(e, phi)}")
                 
                 with col2:
-                    st.subheader("🔐 Kunci")
+                    st.subheader("Kunci")
                     
                     if edit_mode:
                         # Mode edit - bisa input e langsung
@@ -278,7 +278,7 @@ def main():
                             else:
                                 st.error(f"❌ e = {new_e} tidak relatif prima dengan φ = {phi} (GCD = {gcd(new_e, phi)})")
                         
-                        st.info("💡 Ubah nilai e di sidebar untuk menerapkan perubahan")
+                        st.info("Ubah nilai e di sidebar untuk menerapkan perubahan")
                     
                     # Kunci Publik (selalu tampil)
                     st.write(f"**Kunci Publik (e, n) =** ({e}, {n})")
@@ -316,7 +316,7 @@ def main():
                 st.markdown("---")
                 
                 # Input pesan dengan opsi mode
-                st.header("💬 Enkripsi dan Dekripsi Pesan")
+                st.header("Enkripsi dan Dekripsi Pesan")
                 
                 # Mode input
                 input_mode = st.radio("Mode Input:", ["Text Input", "File Upload"], horizontal=True,
@@ -354,7 +354,7 @@ def main():
                     # Enkripsi
                     st.subheader("🔒 Proses Enkripsi")
                     
-                    with st.expander("ℹ️ Bagaimana enkripsi bekerja?", expanded=False):
+                    with st.expander("Bagaimana enkripsi bekerja?", expanded=False):
                         st.write("""
                         **Proses Enkripsi:**
                         1. Setiap karakter dikonversi ke nilai ASCII
@@ -405,23 +405,10 @@ def main():
                             mime="text/plain"
                         )
                     
-                    # Visualisasi proses enkripsi
-                    if len(pesan) <= 10:
-                        with st.expander("📊 Visualisasi Proses Enkripsi", expanded=False):
-                            st.write("**Grafik Transformasi ASCII → Ciphertext**")
-                            chart_data = pd.DataFrame({
-                                'Karakter': [ch if ch != ' ' else '␣' for ch in pesan],
-                                'Nilai ASCII': [ord(ch) for ch in pesan],
-                                'Ciphertext': cipher_numbers
-                            })
-                            st.bar_chart(chart_data.set_index('Karakter')[['Nilai ASCII', 'Ciphertext']])
-                    
-                    st.markdown("---")
-                    
                     # Proses Dekripsi
                     st.subheader("🔓 Proses Dekripsi")
                     
-                    with st.expander("ℹ️ Bagaimana dekripsi bekerja?", expanded=False):
+                    with st.expander("Bagaimana dekripsi bekerja?", expanded=False):
                         st.write("""
                         **Proses Dekripsi:**
                         1. Ciphertext dipangkatkan dengan eksponen privat d
@@ -474,7 +461,7 @@ def main():
                     st.markdown("---")
                     st.subheader("📚 Penjelasan Matematis")
                     
-                    with st.expander("📖 Lihat Detail Formula", expanded=False):
+                    with st.expander("Lihat Detail Formula", expanded=False):
                         st.latex(r"c \equiv m^e \pmod{n}")
                         st.write(f"**Enkripsi:** c ≡ m^{e} (mod {n})")
                         st.write("")
