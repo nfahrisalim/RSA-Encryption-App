@@ -107,7 +107,7 @@ def main():
     st.markdown("---")
     
     # RSA Parameters in main area
-    st.header("RSA Parameters")
+    st.header("Parameter RSA")
     
     # Generator bilangan prima
     st.subheader("Generator Bilangan Prima")
