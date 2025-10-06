@@ -352,7 +352,7 @@ def main():
                 
                 if pesan:
                     # Enkripsi
-                    st.subheader("🔒 Proses Enkripsi")
+                    st.subheader("Proses Enkripsi")
                     
                     with st.expander("Bagaimana enkripsi bekerja?", expanded=False):
                         st.write("""
@@ -459,7 +459,7 @@ def main():
                     
                     # Penjelasan matematis
                     st.markdown("---")
-                    st.subheader("📚 Penjelasan Matematis")
+                    st.subheader("Penjelasan Matematis")
                     
                     with st.expander("Lihat Detail Formula", expanded=False):
                         st.latex(r"c \equiv m^e \pmod{n}")
