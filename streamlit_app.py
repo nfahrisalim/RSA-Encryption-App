@@ -106,41 +106,48 @@ def main():
     st.title("RSA Encryption/Decryption Calculator")
     st.markdown("---")
     
-    # Sidebar untuk parameter RSA
-    st.sidebar.header("RSA Parameters")
+    # RSA Parameters in main area
+    st.header("RSA Parameters")
     
-    # Opsi generate random primes
-    st.sidebar.subheader("Generator Bilangan Prima")
-    if st.sidebar.button("Generate Random Primes", help="Klik untuk membuat bilangan prima p dan q secara acak"):
+    # Generator bilangan prima
+    st.subheader("Generator Bilangan Prima")
+    if st.button("Generate Random Primes", help="Klik untuk membuat bilangan prima p dan q secara acak"):
         st.session_state.random_p = generate_random_prime(10, 100)
         st.session_state.random_q = generate_random_prime(10, 100)
         while st.session_state.random_q == st.session_state.random_p:
             st.session_state.random_q = generate_random_prime(10, 100)
-        st.sidebar.success(f"✨ Generated: p={st.session_state.random_p}, q={st.session_state.random_q}")
+        st.success(f"✨ Generated: p={st.session_state.random_p}, q={st.session_state.random_q}")
     
     # Input untuk bilangan prima p dan q
     default_p = st.session_state.get('random_p', 7)
     default_q = st.session_state.get('random_q', 11)
     
-    st.sidebar.subheader("Input Bilangan Prima")
-    p = st.sidebar.number_input("Masukkan bilangan prima p:", min_value=2, value=default_p, step=1, 
-                                help="Bilangan prima pertama untuk RSA. Contoh: 7, 11, 13, 17, 19, 23")
-    q = st.sidebar.number_input("Masukkan bilangan prima q:", min_value=2, value=default_q, step=1,
-                                help="Bilangan prima kedua untuk RSA. Harus berbeda dari p")
+    st.subheader("Input Bilangan Prima")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        p = st.number_input("Masukkan bilangan prima p:", min_value=2, value=default_p, step=1, 
+                           help="Bilangan prima pertama untuk RSA. Contoh: 7, 11, 13, 17, 19, 23")
+    with col2:
+        q = st.number_input("Masukkan bilangan prima q:", min_value=2, value=default_q, step=1,
+                           help="Bilangan prima kedua untuk RSA. Harus berbeda dari p")
     
     # Validasi bilangan prima
     p_is_prime = is_prime(p)
     q_is_prime = is_prime(q)
     
-    if not p_is_prime:
-        st.sidebar.error(f"❌ {p} bukan bilangan prima!")
-    else:
-        st.sidebar.success(f"✅ {p} adalah bilangan prima")
+    col1, col2 = st.columns(2)
+    with col1:
+        if not p_is_prime:
+            st.error(f"❌ {p} bukan bilangan prima!")
+        else:
+            st.success(f"✅ {p} adalah bilangan prima")
     
-    if not q_is_prime:
-        st.sidebar.error(f"❌ {q} bukan bilangan prima!")
-    else:
-        st.sidebar.success(f"✅ {q} adalah bilangan prima")
+    with col2:
+        if not q_is_prime:
+            st.error(f"❌ {q} bukan bilangan prima!")
+        else:
+            st.success(f"✅ {q} adalah bilangan prima")
     
     # Jika p dan q valid, lanjutkan
     if p_is_prime and q_is_prime and p != q:
@@ -148,14 +155,14 @@ def main():
         phi = (p - 1) * (q - 1)
         
         # Input untuk e
-        st.sidebar.subheader("Eksponen Publik")
-        e = st.sidebar.number_input(f"Masukkan nilai e (1 < e < {phi}, relatif prima dengan φ):", 
-                                   min_value=2, max_value=phi-1, value=min(65537, phi-1) if phi > 65537 else min(17, phi-1), step=1,
-                                   help="Eksponen enkripsi publik. Nilai umum: 3, 17, 257, 65537")
+        st.subheader("Eksponen Publik")
+        e = st.number_input(f"Masukkan nilai e (1 < e < {phi}, relatif prima dengan φ):", 
+                           min_value=2, max_value=phi-1, value=min(65537, phi-1) if phi > 65537 else min(17, phi-1), step=1,
+                           help="Eksponen enkripsi publik. Nilai umum: 3, 17, 257, 65537")
         
         # Validasi e
         if gcd(e, phi) == 1:
-            st.sidebar.success(f"✅ e = {e} relatif prima dengan φ = {phi}")
+            st.success(f"✅ e = {e} relatif prima dengan φ = {phi}")
             
             # Hitung d
             try:
@@ -479,17 +486,17 @@ def main():
                         st.write(f"- Hasil: {e} × {d} = {e*d}, {e*d} mod {phi} = {(e*d) % phi}")
                     
             except Exception as ex:
-                st.sidebar.error(f"Error menghitung private key: {str(ex)}")
+                st.error(f"Error menghitung private key: {str(ex)}")
                 
         else:
-            st.sidebar.error(f"❌ e = {e} tidak relatif prima dengan φ = {phi} (GCD = {gcd(e, phi)})")
+            st.error(f"❌ e = {e} tidak relatif prima dengan φ = {phi} (GCD = {gcd(e, phi)})")
     
     elif p == q:
-        st.sidebar.error("❌ p dan q tidak boleh sama!")
+        st.error("❌ p dan q tidak boleh sama!")
     
     # Informasi tambahan
-    st.sidebar.markdown("---")
-    st.sidebar.info("""
+    st.markdown("---")
+    st.info("""
     **💡 Tips:**
     - Pilih bilangan prima p dan q yang berbeda
     - e harus relatif prima dengan φ(n)
