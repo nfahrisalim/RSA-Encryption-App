@@ -406,7 +406,7 @@ def main():
                         )
                     
                     # Proses Dekripsi
-                    st.subheader("🔓 Proses Dekripsi")
+                    st.subheader("Proses Dekripsi")
                     
                     with st.expander("Bagaimana dekripsi bekerja?", expanded=False):
                         st.write("""
