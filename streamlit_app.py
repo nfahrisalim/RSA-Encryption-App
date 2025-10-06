@@ -111,7 +111,7 @@ def main():
     
     # Generator bilangan prima
     st.subheader("Generator Bilangan Prima")
-    if st.button("Generate Random Primes", help="Klik untuk membuat bilangan prima p dan q secara acak"):
+    if st.button("Buat angka prima acak", help="Klik untuk membuat bilangan prima p dan q secara acak"):
         st.session_state.random_p = generate_random_prime(10, 100)
         st.session_state.random_q = generate_random_prime(10, 100)
         while st.session_state.random_q == st.session_state.random_p:
